@@ -113,7 +113,7 @@ const Form = () => {
 
   function printData() {
     setInvalid(true);
-    if (date && tower && floor && room && timeFrom && timeTo && text) {
+    if (date && tower && floor && room && timeFrom && timeTo) {
       let obj = {
         tower,
         floor,
@@ -203,7 +203,9 @@ const Form = () => {
           <FormLayoutGroup mode="horizontal">
             <FormItem
               top="Время начала"
-              bottom={timeFrom && timeTo ? `${(timeTo - timeFrom) / 60000} минут` : ''}
+              bottom={
+                timeFrom && timeTo ? `Длительность — ${(timeTo - timeFrom) / 60000} минут` : ''
+              }
               status={!timeFrom && invalid ? 'error' : ''}
             >
               <Select
@@ -224,7 +226,7 @@ const Form = () => {
               />
             </FormItem>
           </FormLayoutGroup>
-          <FormItem top="Комментарий" status={!text && invalid ? 'error' : ''}>
+          <FormItem top="Комментарий">
             <Textarea
               placeholder="Введите комментарий"
               value={text}
