@@ -1,13 +1,35 @@
 body {
+  background: var(--vkui--color_background);
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+.form {
+  width: 500px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .form {
+    width: 100%;
+    margin: auto;
+    display: block;
+    align-items: unset;
+    height: auto;
+  }
+}
+
+.vkuiGroup {
+  width: 100%;
+}
+
+.vkuiFormLayoutGroup--mode-horizontal,
+.vkuiFormField {
+  isolation: unset !important;
+}
+
+.vkuiPopper {
+  z-index: 10 !important;
 }
