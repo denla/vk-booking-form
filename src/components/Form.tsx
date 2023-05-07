@@ -17,33 +17,54 @@ import {
 import '@vkontakte/vkui/dist/vkui.css';
 
 const Form = () => {
-  //Контролируем селекты и textarea
   const [tower, setTower] = useState('');
-  const [floor, setFloor] = useState('');
-  const [room, setRoom] = useState('');
-  const [date, setDate] = useState();
-  const [timeFrom, setTimeFrom] = useState('');
-  const [timeTo, setTimeTo] = useState('');
+  const [floor, setFloor] = useState(0);
+  const [room, setRoom] = useState(0);
+  const [date, setDate] = useState<Date | undefined>(undefined);
+  const [timeFrom, setTimeFrom] = useState(0);
+  const [timeTo, setTimeTo] = useState(0);
   const [text, setText] = useState('');
 
   //Храним забронированные переговорки
-  const [list, setList] = useState([]);
+  const [list, setList] = useState<any>([]);
 
-  const [snackbar, setSnackbar] = React.useState(null);
+  const [snackbar, setSnackbar] = React.useState<any>(null);
   const [invalid, setInvalid] = useState(false);
 
+  type FloorOptions = {
+    label: number;
+    value: number;
+  };
+
+  type TimeOptions = {
+    label: string;
+    value: number;
+    disabled: boolean;
+  };
+
+  type FinalObject = {
+    tower: string;
+    floor: number;
+    room: number;
+    date: Date;
+    timeFrom: number;
+    timeTo: number;
+    text: string | undefined;
+  };
+
   //Этажи от 3 до 27
-  const floors = [];
+  const floors: any[] = [];
   for (let i = 3; i <= 27; i++) {
-    floors.push({ label: i, value: i });
+    let obj: FloorOptions = { label: i, value: i };
+    floors.push(obj);
   }
 
   //Номера переговорок от 1 до 10
-  const rooms = Array(10)
-    .fill()
+  const rooms: any[] = Array(10)
+    .fill(undefined)
     .map((e, i) => ({ label: i + 1, value: i + 1 }));
 
-  let timesFrom = [];
+  let timesFrom: any[] = [];
   let filteredList;
   if (date) {
     timesFrom = [];
@@ -51,7 +72,7 @@ const Form = () => {
     let isTimeDisabled = false;
 
     filteredList = list.filter(
-      (item) =>
+      (item: FinalObject) =>
         item.tower === tower &&
         item.floor === floor &&
         item.room === room &&
@@ -67,21 +88,22 @@ const Form = () => {
       }
       //Ищем уже занятое время
       let busySlots = filteredList.find(
-        (item) => item.timeFrom <= newTime.toString() && newTime.toString() < item.timeTo,
+        (item) => item.timeFrom <= Number(newTime) && Number(newTime) < item.timeTo,
       );
       //Делаем неактивным пункт выпадающего списка, если время занято
       busySlots ? (isTimeDisabled = true) : (isTimeDisabled = false);
       //Заполняем массив timesFrom [{label, value}]
-      timesFrom.push({
+      let obj: TimeOptions = {
         label: newDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
         value: newTime,
         disabled: isTimeDisabled,
-      });
+      };
+      timesFrom.push(obj);
     }
   }
 
   //Заполнение массива timesTo
-  let timesTo = [];
+  let timesTo: any[] = [];
   if (date && timeFrom) {
     timesTo = [];
     let isTimeDisabled = false;
@@ -91,30 +113,30 @@ const Form = () => {
       let newTime = newDate.getTime();
       //Проверка на случай, если текущее время уже занято
       let busySlots = filteredList.find(
-        (item) => item.timeFrom < newTime.toString() && newTime.toString() <= item.timeTo,
+        (item) => item.timeFrom < Number(newTime) && Number(newTime) <= item.timeTo,
       );
-      //Не выводим лишнее
+      //Запись до 21:00
       if (busySlots || (newDate.getHours() === 21 && newDate.getMinutes() > 0)) {
         break;
       }
       //options для sel[{label, value}]
-      timesTo.push({
+      let obj: TimeOptions = {
         label: newDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
         value: newTime,
         disabled: isTimeDisabled,
-      });
+      };
+      timesTo.push(obj);
     }
   }
 
-  //Очищаем timeTo при изменении значения timeFrom
   useEffect(() => {
-    setTimeTo('');
+    setTimeTo(0);
   }, [timeFrom]);
 
-  function printData() {
+  const printData = () => {
     setInvalid(true);
     if (date && tower && floor && room && timeFrom && timeTo) {
-      let obj = {
+      let obj: FinalObject = {
         tower,
         floor,
         room,
@@ -124,25 +146,24 @@ const Form = () => {
         text,
       };
       setList([...list, obj]);
-      // console.log(list);
       console.log(JSON.stringify(obj));
       clearData();
       openSuccess();
     }
-  }
+  };
 
-  function clearData() {
+  const clearData = () => {
     setTower('');
-    setFloor('');
-    setRoom('');
-    setDate();
-    setTimeFrom('');
-    setTimeTo('');
+    setFloor(0);
+    setRoom(0);
+    setDate(undefined);
+    setTimeFrom(0);
+    setTimeTo(0);
     setText('');
     setInvalid(false);
-  }
+  };
 
-  function openSuccess() {
+  const openSuccess = () => {
     if (snackbar) return;
     setSnackbar(
       <Snackbar
@@ -152,7 +173,7 @@ const Form = () => {
         Информация выведена в консоль
       </Snackbar>,
     );
-  }
+  };
 
   return (
     <div className="form">
@@ -161,7 +182,7 @@ const Form = () => {
           <Title level="2" style={{ margin: 16 }}>
             Выбор переговорной
           </Title>
-          <FormItem top="Выбранная башня" status={!tower && invalid ? 'error' : ''}>
+          <FormItem top="Выбранная башня" status={!tower && invalid ? 'error' : undefined}>
             <Select
               placeholder="Выберите башню"
               value={tower}
@@ -173,19 +194,19 @@ const Form = () => {
             />
           </FormItem>
           <FormLayoutGroup mode="horizontal">
-            <FormItem top="Выбранный этаж" status={!floor && invalid ? 'error' : ''}>
+            <FormItem top="Выбранный этаж" status={!floor && invalid ? 'error' : undefined}>
               <Select
                 placeholder="Выберите этаж"
                 value={floor}
-                onChange={(e) => setFloor(e.target.value)}
+                onChange={(e) => setFloor(+e.target.value)}
                 options={floors}
               />
             </FormItem>
-            <FormItem top="Выбранная переговорная" status={!room && invalid ? 'error' : ''}>
+            <FormItem top="Выбранная переговорная" status={!room && invalid ? 'error' : undefined}>
               <Select
                 placeholder="Выберите переговорную"
                 value={room}
-                onChange={(e) => setRoom(e.target.value)}
+                onChange={(e) => setRoom(+e.target.value)}
                 options={rooms}
               />
             </FormItem>
@@ -196,7 +217,7 @@ const Form = () => {
               onChange={setDate}
               style={{ boxSizing: 'border-box' }}
               disablePast={true}
-              status={!date && invalid ? 'error' : ''}
+              status={!date && invalid ? 'error' : undefined}
               disablePickers={true}
             />
           </FormItem>
@@ -206,21 +227,21 @@ const Form = () => {
               bottom={
                 timeFrom && timeTo ? `Длительность — ${(timeTo - timeFrom) / 60000} минут` : ''
               }
-              status={!timeFrom && invalid ? 'error' : ''}
+              status={!timeFrom && invalid ? 'error' : undefined}
             >
               <Select
                 placeholder="00:00"
                 value={timeFrom}
-                onChange={(e) => setTimeFrom(e.target.value)}
+                onChange={(e) => setTimeFrom(+e.target.value)}
                 options={timesFrom}
-                disabled={date ? false : true}
+                disabled={tower && floor && room && date ? false : true}
               />
             </FormItem>
-            <FormItem top="До" status={!timeTo && invalid ? 'error' : ''}>
+            <FormItem top="До" status={!timeTo && invalid ? 'error' : undefined}>
               <Select
                 placeholder="00:00"
                 value={timeTo}
-                onChange={(e) => setTimeTo(e.target.value)}
+                onChange={(e) => setTimeTo(+e.target.value)}
                 options={timesTo}
                 disabled={timeFrom ? false : true}
               />
@@ -246,7 +267,7 @@ const Form = () => {
               appearance="accent"
               stretched
               mode="secondary"
-              onClick={(e) => clearData(e)}
+              onClick={clearData}
               disabled={
                 !(date || tower || floor || room || text || timeFrom || timeTo) ? true : false
               }

@@ -1,5 +1,5 @@
 import React from 'react';
-import Form from './components/Form';
+import Form from './components/Form.tsx';
 
 import { ConfigProvider, View, Panel } from '@vkontakte/vkui';
 import '@vkontakte/vkui/dist/vkui.css';
