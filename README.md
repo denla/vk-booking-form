@@ -2,7 +2,7 @@
 
 ![preview img](/preview.png)
 
-Look at it in action: [https://vk-booking-form.vercel.app/]https://vk-booking-form.vercel.app/
+Look at it in action: [https://vk-booking-form.vercel.app/](https://vk-booking-form.vercel.app/)
 
 # Getting Started with Create React App
 
