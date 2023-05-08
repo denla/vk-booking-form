@@ -2,6 +2,8 @@
 
 ![preview img](/preview.png)
 
+Look at it in action: [https://vk-booking-form.vercel.app/]https://vk-booking-form.vercel.app/
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
