@@ -60,7 +60,7 @@ const Form = () => {
 
   React.useEffect(() => {
     if (date && startTime) {
-      setEndTimes(createTimeOptions(startTime, 1, 5, false));
+      setEndTimes(createTimeOptions(startTime, 1, 4, false));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startTime]);
@@ -221,7 +221,6 @@ const Form = () => {
             <DateInput
               value={date}
               onChange={setDate}
-              style={{ boxSizing: 'border-box' }}
               disablePast={true}
               status={!date && invalid ? 'error' : undefined}
               disablePickers={true}
