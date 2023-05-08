@@ -21,129 +21,135 @@ const Form = () => {
   const [floor, setFloor] = useState(0);
   const [room, setRoom] = useState(0);
   const [date, setDate] = useState<Date | undefined>(undefined);
-  const [timeFrom, setTimeFrom] = useState(0);
-  const [timeTo, setTimeTo] = useState(0);
+  const [startTime, setStartTime] = useState(0);
+  const [endTime, setEndTime] = useState(0);
   const [text, setText] = useState('');
 
   //Храним забронированные переговорки
   const [list, setList] = useState<any>([]);
 
-  const [snackbar, setSnackbar] = React.useState<any>(null);
+  const [floors, setFloors] = useState([]);
+  const [rooms, setRooms] = useState([]);
+  const [startTimes, setStartTimes] = useState([]);
+  const [endTimes, setEndTimes] = useState([]);
+
   const [invalid, setInvalid] = useState(false);
+  const [snackbar, setSnackbar] = React.useState<any>(null);
 
-  type FloorOptions = {
-    label: number;
-    value: number;
-  };
+  React.useEffect(() => {
+    setFloors(createNumArr(3, 27));
+    setRooms(createNumArr(1, 10));
+  }, []);
 
-  type TimeOptions = {
-    label: string;
-    value: number;
-    disabled: boolean;
-  };
-
-  type FinalObject = {
-    tower: string;
-    floor: number;
-    room: number;
-    date: Date;
-    timeFrom: number;
-    timeTo: number;
-    text: string | undefined;
-  };
-
-  //Этажи от 3 до 27
-  const floors: any[] = [];
-  for (let i = 3; i <= 27; i++) {
-    let obj: FloorOptions = { label: i, value: i };
-    floors.push(obj);
-  }
-
-  //Номера переговорок от 1 до 10
-  const rooms: any[] = Array(10)
-    .fill(undefined)
-    .map((e, i) => ({ label: i + 1, value: i + 1 }));
-
-  let timesFrom: any[] = [];
-  let filteredList;
-  if (date) {
-    timesFrom = [];
-    let currentDate = new Date();
-    let isTimeDisabled = false;
-
-    filteredList = list.filter(
-      (item: FinalObject) =>
-        item.tower === tower &&
-        item.floor === floor &&
-        item.room === room &&
-        item.date.toString() === date.toString(),
-    );
-
-    //Генерируем массив options для выпадающего списка с временем начала переговоров
-    for (let i = 18; i < 42; i++) {
-      let newDate = new Date(date.getTime() + i * 30 * 60000);
-      let newTime = newDate.getTime();
-      if (newTime < currentDate.getTime()) {
-        continue;
-      }
-      //Ищем уже занятое время
-      let busySlots = filteredList.find(
-        (item) => item.timeFrom <= Number(newTime) && Number(newTime) < item.timeTo,
-      );
-      //Делаем неактивным пункт выпадающего списка, если время занято
-      busySlots ? (isTimeDisabled = true) : (isTimeDisabled = false);
-      //Заполняем массив timesFrom [{label, value}]
-      let obj: TimeOptions = {
-        label: newDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        value: newTime,
-        disabled: isTimeDisabled,
-      };
-      timesFrom.push(obj);
+  const createNumArr = (n: number, m: number) => {
+    let arr: any = [];
+    for (let i = n; i <= m; i++) {
+      arr.push({ label: i, value: i });
     }
-  }
+    return arr;
+  };
 
-  //Заполнение массива timesTo
-  let timesTo: any[] = [];
-  if (date && timeFrom) {
-    timesTo = [];
-    let isTimeDisabled = false;
-
-    for (let i = 1; i <= 4; i++) {
-      let newDate = new Date(+timeFrom + i * 30 * 60000);
-      let newTime = newDate.getTime();
-      //Проверка на случай, если текущее время уже занято
-      let busySlots = filteredList.find(
-        (item) => item.timeFrom < Number(newTime) && Number(newTime) <= item.timeTo,
-      );
-      //Запись до 21:00
-      if (busySlots || (newDate.getHours() === 21 && newDate.getMinutes() > 0)) {
-        break;
-      }
-      //options для sel[{label, value}]
-      let obj: TimeOptions = {
-        label: newDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
-        value: newTime,
-        disabled: isTimeDisabled,
-      };
-      timesTo.push(obj);
+  React.useEffect(() => {
+    if (date) {
+      setStartTimes(createTimeOptions(date.getTime(), 18, 41, true));
     }
-  }
+    setStartTime(0);
+    setEndTime(0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, tower, floor, room]);
+
+  React.useEffect(() => {
+    if (date && startTime) {
+      setEndTimes(createTimeOptions(startTime, 1, 5, false));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime]);
+
+  //Создаем массив options для выпадающих списков с временем с учетом уже занятых слотов
+  const createTimeOptions = (startTime: number, n: number, m: number, isFirst: boolean) => {
+    if (date) {
+      let arr: any = [];
+      let currentDate = new Date();
+      let isTimeDisabled;
+      let filteredList = list.filter(
+        (item) =>
+          item.tower === tower &&
+          item.floor === floor &&
+          item.room === room &&
+          item.date.toString() === date.toString(),
+      );
+
+      for (let i = n; i <= m; i++) {
+        let newDate = new Date(startTime + i * 30 * 60000);
+        let newTime = newDate.getTime();
+        if (isFirst) {
+          if (newTime < currentDate.getTime()) {
+            continue;
+          }
+        }
+        //Делаем неактивным занятое время
+        if (list) {
+          let busySlots = filteredList.find((item) =>
+            isFirst
+              ? item.time.start.ms <= newTime && newTime < item.time.end.ms
+              : item.time.start.ms < newTime && newTime <= item.time.end.ms,
+          );
+          if (!isFirst) {
+            if (busySlots || (newDate.getHours() === 21 && newDate.getMinutes() > 0)) {
+              break;
+            }
+          }
+          isTimeDisabled = busySlots ? true : false;
+        }
+
+        let obj = {
+          label: newDate.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+          value: newTime,
+          disabled: isTimeDisabled,
+        };
+        arr.push(obj);
+      }
+      return arr;
+    }
+  };
 
   useEffect(() => {
-    setTimeTo(0);
-  }, [timeFrom]);
+    setStartTime(0);
+  }, [date]);
+
+  useEffect(() => {
+    setEndTime(0);
+  }, [startTime]);
 
   const printData = () => {
     setInvalid(true);
-    if (date && tower && floor && room && timeFrom && timeTo) {
-      let obj: FinalObject = {
+    if (date && tower && floor && room && startTime && endTime) {
+      let obj = {
         tower,
         floor,
         room,
         date,
-        timeFrom,
-        timeTo,
-        text,
+        time: {
+          start: {
+            ms: startTime,
+            locale: {
+              ru: new Date(startTime).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            },
+          },
+          end: {
+            ms: endTime,
+            locale: {
+              ru: new Date(endTime).toLocaleTimeString('ru-RU', {
+                hour: '2-digit',
+                minute: '2-digit',
+              }),
+            },
+          },
+        },
+        text: text ? text : null,
       };
       setList([...list, obj]);
       console.log(JSON.stringify(obj));
@@ -157,8 +163,8 @@ const Form = () => {
     setFloor(0);
     setRoom(0);
     setDate(undefined);
-    setTimeFrom(0);
-    setTimeTo(0);
+    setStartTime(0);
+    setEndTime(0);
     setText('');
     setInvalid(false);
   };
@@ -189,7 +195,7 @@ const Form = () => {
               onChange={(e) => setTower(e.target.value)}
               options={[
                 { label: 'Башня A', value: 'a' },
-                { label: 'Башня B', value: 'b' },
+                { label: 'Башня Б', value: 'b' },
               ]}
             />
           </FormItem>
@@ -225,25 +231,25 @@ const Form = () => {
             <FormItem
               top="Время начала"
               bottom={
-                timeFrom && timeTo ? `Длительность — ${(timeTo - timeFrom) / 60000} минут` : ''
+                startTime && endTime ? `Длительность — ${(endTime - startTime) / 60000} минут` : ''
               }
-              status={!timeFrom && invalid ? 'error' : undefined}
+              status={!startTime && invalid ? 'error' : undefined}
             >
               <Select
                 placeholder="00:00"
-                value={timeFrom}
-                onChange={(e) => setTimeFrom(+e.target.value)}
-                options={timesFrom}
+                value={startTime}
+                onChange={(e) => setStartTime(+e.target.value)}
+                options={startTimes}
                 disabled={tower && floor && room && date ? false : true}
               />
             </FormItem>
-            <FormItem top="До" status={!timeTo && invalid ? 'error' : undefined}>
+            <FormItem top="До" status={!endTime && invalid ? 'error' : undefined}>
               <Select
                 placeholder="00:00"
-                value={timeTo}
-                onChange={(e) => setTimeTo(+e.target.value)}
-                options={timesTo}
-                disabled={timeFrom ? false : true}
+                value={endTime}
+                onChange={(e) => setEndTime(+e.target.value)}
+                options={endTimes}
+                disabled={startTime ? false : true}
               />
             </FormItem>
           </FormLayoutGroup>
@@ -269,7 +275,7 @@ const Form = () => {
               mode="secondary"
               onClick={clearData}
               disabled={
-                !(date || tower || floor || room || text || timeFrom || timeTo) ? true : false
+                !(date || tower || floor || room || text || startTime || endTime) ? true : false
               }
             >
               Очистить
