@@ -1,4 +1,4 @@
-# Форма бронирования переговоров для Стажировки VK
+# VK Booking Form
 
 ![preview img](/preview.png)
 
